@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4 display-4">Graphique de Température</h1>
+
+    <!-- Boutons pour filtrer les données -->
+    <div class="btn-toolbar mb-4 justify-content-center">
+        <div class="btn-group">
+            <button id="aujourdhui-link" class="btn btn-outline-primary">
+                <i class="fas fa-calendar-day me-2"></i> Aujourd'hui
+            </button>
+            <button id="semaine-link" class="btn btn-outline-primary">
+                <i class="fas fa-calendar-week me-2"></i> Cette Semaine
+            </button>
+            <button id="mois-link" class="btn btn-outline-primary">
+                <i class="fas fa-calendar-alt me-2"></i> Ce Mois
+            </button>
+        </div>
+    </div>
+
+    <!-- Graphique -->
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-gradient-primary text-white">
+            <h5 class="card-title mb-0"><i class="fas fa-thermometer-half me-2"></i> Température (°C)</h5>
+        </div>
+        <div class="card-body">
+            <!-- Boutons de zoom -->
+            <div class="d-flex justify-content-end mb-3">
+                <button id="zoom-in" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="fas fa-search-plus"></i> Zoom +
+                </button>
+                <button id="zoom-out" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="fas fa-search-minus"></i> Zoom -
+                </button>
+                <button id="reset-zoom" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-sync-alt"></i> Réinitialiser
+                </button>
+            </div>
+            <!-- Graphique -->
+            <canvas class="my-4 w-80" id="graphique-temp" height="120"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts pour Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+<!-- Script pour initialiser le graphique -->
+<script>
+    // Enregistre le plugin de zoom
+    Chart.register(ChartZoom);
+
+    // Objet global pour stocker les limites des axes pour chaque période
+    const chartLimits = {
+        aujourdhui: null,
+        semaine: null,
+        mois: null,
+    };
+
+    // Variable pour stocker la période actuelle
+    let currentPeriod = 'aujourdhui';
+
+    // Fonction pour détruire le graphique existant et sauvegarder les limites
+    const destroyChart = () => {
+        if (window.myChart) {
+            // Stocker les limites actuelles des axes pour la période actuelle
+            const xScale = window.myChart.scales.x;
+            const yScale = window.myChart.scales.y;
+            chartLimits[currentPeriod] = {
+                xMin: xScale.min,
+                xMax: xScale.max,
+                yMin: yScale.min,
+                yMax: yScale.max,
+            };
+            window.myChart.destroy(); // Détruit le graphique existant
+            window.myChart = null;    // Réinitialise la variable
+        }
+    };
+
+    // Fonction pour créer un nouveau graphique
+    const createChart = (url, borderWidth, period) => {
+        // Détruit le graphique existant et sauvegarde les limites actuelles
+        destroyChart();
+
+        // Met à jour la période actuelle
+        currentPeriod = period;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const labels = data.temps;
+                const dataValues = data.temperature;
+                const ctx = document.getElementById('graphique-temp').getContext('2d');
+                window.myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Température (°C)',
+                            data: dataValues,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: borderWidth,
+                            pointRadius: 3,
+                            pointBackgroundColor: 'rgba(255, 99, 132, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Température (°C)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Temps'
+                                }
+                            }
+                        },
+                        plugins: {
+                            zoom: {
+                                zoom: {
+                                    wheel: {
+                                        enabled: true,
+                                        speed: 0.1,
+                                    },
+                                    pinch: {
+                                        enabled: true
+                                    },
+                                    mode: 'xy',
+                                },
+                                pan: {
+                                    enabled: true,
+                                    mode: 'xy',
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Appliquer les limites sauvegardées si elles existent pour la période actuelle
+                if (chartLimits[currentPeriod]) {
+                    window.myChart.options.scales.x.min = chartLimits[currentPeriod].xMin;
+                    window.myChart.options.scales.x.max = chartLimits[currentPeriod].xMax;
+                    window.myChart.options.scales.y.min = chartLimits[currentPeriod].yMin;
+                    window.myChart.options.scales.y.max = chartLimits[currentPeriod].yMax;
+                    window.myChart.update(); // Mettre à jour le graphique
+                }
+            })
+            .catch(error => console.error('Erreur lors du chargement des données :', error));
+    };
+
+    // Écouteurs d'événements pour les boutons
+    document.getElementById('aujourdhui-link').addEventListener('click', () => createChart('/chart-data-jour/', 2, 'aujourdhui'));
+    document.getElementById('semaine-link').addEventListener('click', () => createChart('/chart-data-semaine/', 2, 'semaine'));
+    document.getElementById('mois-link').addEventListener('click', () => createChart('/chart-data-mois/', 2, 'mois'));
+
+    // Fonction pour zoomer
+    document.getElementById('zoom-in').addEventListener('click', () => {
+        if (window.myChart) {
+            window.myChart.zoom(1.1); // Zoom in de 10%
+        }
+    });
+
+    // Fonction pour dézoomer
+    document.getElementById('zoom-out').addEventListener('click', () => {
+        if (window.myChart) {
+            window.myChart.zoom(0.9); // Zoom out de 10%
+        }
+    });
+
+    // Fonction pour réinitialiser le zoom
+    document.getElementById('reset-zoom').addEventListener('click', () => {
+        if (window.myChart) {
+            window.myChart.resetZoom(); // Réinitialiser le zoom
+        }
+    });
+
+    // Charge initiale du graphique
+    createChart('/chart-data/', 2, 'aujourdhui');
+</script>
+
+<!-- Styles CSS personnalisés -->
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        border-radius: 15px 15px 0 0;
+        background: linear-gradient(45deg, #007bff, #00bcd4);
+    }
+
+    .btn-outline-primary {
+        border-color: #007bff;
+        color: #007bff;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #007bff;
+        color: #fff;
+    }
+
+    .btn-outline-secondary {
+        border-color: #6c757d;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: #fff;
+    }
+</style>
+{% endblock %}

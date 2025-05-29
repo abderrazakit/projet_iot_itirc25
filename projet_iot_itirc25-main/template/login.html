@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+<!-- Styles CSS personnalisés -->
+<style>
+    body {
+        background-image: linear-gradient(to bottom right, rgba(77, 228, 248, 0.7), rgba(0, 0, 0, 0.7)),
+                          url("{% static 'images/iot.jpg' %}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        color: white;
+        font-family: 'Poppins', sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Overlay sombre pour améliorer la lisibilité */
+    body::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6); /* Fond sombre pour contraster avec le texte */
+        z-index: 1;
+    }
+
+    .content {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 50px;
+        border-radius: 20px;
+        backdrop-filter: blur(15px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        animation: fadeIn 1.5s ease-out;
+    }
+
+    h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        animation: fadeInDown 1s ease-out;
+        color: white;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5); /* Ombre du texte */
+    }
+
+    .btn-custom {
+        padding: 15px 40px;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: white;
+        background-color: #007bff;
+        border: none;
+        border-radius: 50px;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0px 6px 15px rgba(0, 123, 255, 0.5);
+        animation: fadeInUp 1s ease-out 1s;
+        animation-fill-mode: both;
+    }
+
+    .btn-custom:hover {
+        background-color: #0056b3;
+        transform: scale(1.1);
+        box-shadow: 0px 8px 20px rgba(0, 123, 255, 0.7);
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 15px;
+        color: white;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.2rem;
+    }
+
+    .alert {
+        border-radius: 15px;
+        background: rgba(255, 99, 71, 0.8);
+        color: white;
+        border: none;
+        padding: 15px;
+        font-size: 1.2rem;
+        animation: fadeInDown 0.5s ease-out;
+    }
+
+    .text-links {
+        font-size: 1.2rem;
+        margin-top: 20px;
+    }
+
+    .text-links a {
+        color: #007bff;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .text-links a:hover {
+        color: #0056b3;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<!-- Contenu principal -->
+<div class="content">
+    <h1>Connexion</h1>
+
+    <!-- Afficher les messages d'erreur -->
+    {% if message %}
+        <div class="alert alert-danger text-center animate__animated animate__fadeInDown">
+            {{ message }}
+        </div>
+    {% endif %}
+
+    <!-- Formulaire de connexion -->
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <input type="text" class="form-control" id="username" name="username" placeholder="Nom d'utilisateur" required>
+        </div>
+        <div class="mb-3">
+            <input type="password" class="form-control" id="password" name="password" placeholder="Mot de passe" required>
+        </div>
+        <button type="submit" class="btn btn-custom w-100">
+            <i class="fas fa-sign-in-alt me-2"></i> Se connecter
+        </button>
+    </form>
+
+    <!-- Lien "Mot de passe oublié ?" et "Créer un compte" -->
+    <div class="text-links">
+        <p>
+            <a href="#">Mot de passe oublié ?</a> |
+            <a href="#">Créer un compte</a>
+        </p>
+    </div>
+</div>
+
+<!-- Effet de particules -->
+<div class="particles">
+    <div class="particle" style="top: 10%; left: 20%; animation-delay: 0s;"></div>
+    <div class="particle" style="top: 30%; left: 50%; animation-delay: 1s;"></div>
+    <div class="particle" style="top: 70%; left: 80%; animation-delay: 2s;"></div>
+    <div class="particle" style="top: 50%; left: 10%; animation-delay: 3s;"></div>
+    <div class="particle" style="top: 90%; left: 40%; animation-delay: 4s;"></div>
+</div>
+
+<!-- Scripts pour les animations -->
+<script>
+    // Effet de particules
+    const particlesContainer = document.querySelector('.particles');
+    for (let i = 0; i < 10; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        particle.style.top = `${Math.random() * 100}%`;
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.animationDelay = `${Math.random() * 5}s`;
+        particlesContainer.appendChild(particle);
+
+    }
+</script>
+
+{% endblock %}
